@@ -1,0 +1,11 @@
+# Secrets and local state. Never commit any of these.
+.env
+.env.local
+*.key
+credentials.json
+*.session
+*.session-journal
+
+# Local output
+logs/
+node_modules/

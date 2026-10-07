@@ -1,0 +1,16 @@
+[
+  {
+    "phase": "b",
+    "me": "Halo, kita baru mulai sesi baru. Apa yang kamu ingat tentang aku?",
+    "bot": "Halo. Yang aku ingat tentang kamu:\n\n- Security researcher, berbasis di Jakarta\n- Zona waktu GMT+7 (Jakarta)\n- Biasanya kerja dari jam 11 malam sampai 4 pagi\n- Suka kopi hitam tanpa gula\n- Lebih suka jawaban singkat, tanpa basa-basi\n- Tidak mau balasan beremoji\n\nMau lanjut dari mana?\n\n[memory saved to Walrus: 6WMAApVIyx, 3q7-nGJUgh, rYHWUNBucA, AW-MuHusYr]",
+    "seconds": 65.8,
+    "bot_msg_id": 15430
+  },
+  {
+    "phase": "b",
+    "me": "Kalau aku tanya soal pekerjaanku, apa yang kamu tahu?",
+    "bot": "Soal pekerjaanmu, yang tersimpan:\n\n- Kamu security researcher di Jakarta, kerja malam (23.00-04.00).\n- Proyek sampingan: Recollect, chatbot Telegram yang memorinya disimpan di Walrus.\n- Stack proyek itu Node.js dan SQLite.\n- Ada keputusan: semua memori chatbot dipindahkan dari SQLite ke Walrus.\n\nSatu catatan: sebagian memori menyebut namamu \"Celyn\", sementara profil menyebut \"Chovy\". Mana yang benar? Aku bisa perbaiki supaya tidak campur.\n\nDetail teknis pekerjaan (klien, target riset, temuan) tidak ada di memori.",
+    "seconds": 20.5,
+    "bot_msg_id": 15432
+  }
+]

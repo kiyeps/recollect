@@ -1,0 +1,9 @@
+{
+  "name": "walrus-s8-agent",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@mysten-incubation/memwal": "^0.1.8"
+  }
+}

@@ -1,0 +1,9 @@
+[
+  {
+    "phase": "ping",
+    "me": "Ping. Balas satu kata saja.",
+    "bot": "Pong.",
+    "seconds": 16.4,
+    "bot_msg_id": 15435
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "phase": "a",
+    "me": "Celyn yang benar. Chovy itu panggilan orang luar, Celyn panggilan yang aku pakai sendiri.",
+    "bot": "Sudah kucatat: Celyn nama yang benar, Chovy hanya panggilan dari orang luar. Aku pakai Celyn mulai sekarang.\n\nLanjut, mau bahas proyek chatbot Walrus-mu?",
+    "seconds": 78.1,
+    "bot_msg_id": 15420
+  },
+  {
+    "phase": "a",
+    "me": "Proyek yang sedang aku bangun namanya Recollect, chatbot Telegram yang memorinya disimpan di Walrus.",
+    "bot": "Tercatat: proyekmu bernama Recollect, chatbot Telegram dengan memori di Walrus.\n\nMenarik, namanya sama denganku. Mau lanjut ke bagian mana \u2014 penyimpanan memori, pencarian, atau alur Telegram-nya?\n\n[memory saved to Walrus: hRrI0gOLYI, 2XKZ-9jsvv]",
+    "seconds": 65.5,
+    "bot_msg_id": 15422
+  },
+  {
+    "phase": "a",
+    "me": "Aku di Jakarta, zona waktu GMT+7. Biasanya aku kerja jam 11 malam sampai jam 4 pagi.",
+    "bot": "Tercatat: GMT+7, jam kerja 11 malam sampai 4 pagi. Jadi kamu tipe pekerja malam.\n\nKalau kamu mau, aku bisa bantu susun rencana kerja untuk sesi 11 malam itu. Mau mulai dari mana?",
+    "seconds": 65.4,
+    "bot_msg_id": 15424
+  },
+  {
+    "phase": "a",
+    "me": "Aku lebih suka jawaban singkat, tanpa basa-basi, dan tanpa emoji.",
+    "bot": "Tercatat. Lanjut?\n\n[memory saved to Walrus: pJiqPsTl_m, Dzs8lg5H6f, eu-w5q3FCg, EBcR7NL6Vf]",
+    "seconds": 98.2,
+    "bot_msg_id": 15426
+  },
+  {
+    "phase": "a",
+    "me": "Stack yang aku pakai Node.js dan SQLite, tapi sekarang semua memori chatbot harus pindah ke Walrus.",
+    "bot": "Tercatat: Node.js + SQLite, dan keputusan memindahkan semua memori ke Walrus.\n\nGaris besar migrasi:\n1. Bungkus akses memori jadi satu modul (`memory.get/set/search`) supaya SQLite bisa dilepas tanpa mengubah logika bot.\n2. Simpan tiap fakta sebagai blob terpisah di Walrus, satu fakta satu blob, agar update tidak menimpa yang lain.\n3. Simpan indeks `blobId` di SQLite dulu sebagai cache; lama-lama bisa ikut pindah.\n4. Pencarian: Walrus bukan vector store, jadi simpan embedding di blob atau pakai pencarian teks.\n\nMau aku rinci salah satunya?",
+    "seconds": 65.4,
+    "bot_msg_id": 15428
+  }
+]
