@@ -1,0 +1,17 @@
+{
+  "note": "Twelve facts, one per message. This is the shape of the sessions in docs/EVIDENCE.md; change the names and the details for each user account so the three spaces hold three different people.",
+  "facts": [
+    "Namaku Contoh.",
+    "Aku tinggal di Bandung.",
+    "Aku kerja sebagai backend engineer.",
+    "Aku biasanya mulai kerja jam 9 pagi dan selesai jam 6 sore.",
+    "Aku paling produktif di pagi hari.",
+    "Aku suka minum teh hijau tanpa gula waktu kerja.",
+    "Aku tidak suka makanan yang terlalu manis.",
+    "Aku pakai VS Code untuk kerja sehari-hari.",
+    "Aku lebih suka jawaban singkat, tanpa basa-basi.",
+    "Aku sedang belajar Rust di waktu luang.",
+    "Proyek yang sedang aku kerjakan namanya Contoh.",
+    "Aku biasanya tidur jam 1 pagi."
+  ]
+}

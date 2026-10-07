@@ -26,14 +26,14 @@ const api = async (method, payload = {}) => {
 const mem = createMemory(loadCredentials());
 const mkLlm = () => llmFromEnv();
 
-const chats = new Map(); // chatId -> { agent, booted, lock }
+const chats = new Map(); // userId -> { agent, booted, lock }
 
-function getChat(chatId) {
-  if (!chats.has(chatId)) {
-    const agent = createAgent({ mem, llm: mkLlm() });
-    chats.set(chatId, { agent, booted: false, lock: Promise.resolve() });
+function getChat(userId) {
+  if (!chats.has(userId)) {
+    const agent = createAgent({ mem, llm: mkLlm(), userId });
+    chats.set(userId, { agent, booted: false, lock: Promise.resolve() });
   }
-  return chats.get(chatId);
+  return chats.get(userId);
 }
 
 function split(text, n = 3900) {
@@ -67,7 +67,7 @@ async function handle(msg) {
 
   let st;
   try {
-    st = getChat(chatId);
+    st = getChat(userId || chatId);
   } catch (e) {
     console.error("chat init error:", String(e?.message || e));
     return;

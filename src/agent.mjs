@@ -1,7 +1,7 @@
 // Recollect -- the agent loop.
-// The process is disposable: every durable byte lives on Walrus.
-import { NS, recall, rememberMany } from "./memory.mjs";
-import { TOOL_SPECS, runTool } from "./tools.mjs";
+// The process is disposable: every durable byte lives on Walrus, in this user's namespaces.
+import { namespacesFor, recall, rememberMany } from "./memory.mjs";
+import { toolSpecsFor, runTool } from "./tools.mjs";
 
 const SYSTEM = `You are Recollect, a chatbot whose memory lives on Walrus instead of on the machine answering you.
 
@@ -14,15 +14,17 @@ Rules that matter:
 6. Reply in the language the user wrote in. Never use emoji.
 7. You are Recollect, a standalone chatbot. Never mention or adopt any other assistant identity.`;
 
-export function createAgent({ mem, llm, onEvent = () => {} }) {
+export function createAgent({ mem, llm, userId, onEvent = () => {} }) {
+  const ns = namespacesFor(userId);
+  const toolSpecs = toolSpecsFor(ns);
   const history = [];
   let booted = null;
 
   // Pull what we already know before the first reply, so the opening message is not generic.
   async function boot(topicHint = "user identity, preferences, ongoing work") {
     const limit = Number(process.env.BOOT_RECALL_LIMIT || 6);
-    const profile = await recall(mem, topicHint, NS.profile, limit).catch(() => []);
-    const trail = await recall(mem, "what happened in the last conversations", NS.log, 2).catch(() => []);
+    const profile = await recall(mem, topicHint, ns.profile, limit).catch(() => []);
+    const trail = await recall(mem, "what happened in the last conversations", ns.log, 2).catch(() => []);
     booted = { profile, trail };
     return booted;
   }
@@ -42,7 +44,7 @@ export function createAgent({ mem, llm, onEvent = () => {} }) {
     if (!booted) await boot(text);
     history.push({ role: "user", content: text });
     for (let step = 0; step < 4; step += 1) {
-      const out = await llm.complete([{ role: "system", content: systemPrompt() }, ...history], { tools: TOOL_SPECS });
+      const out = await llm.complete([{ role: "system", content: systemPrompt() }, ...history], { tools: toolSpecs });
       if (out.toolCalls.length) {
         history.push({ role: "assistant", content: out.content, tool_calls: out.toolCalls });
         for (const call of out.toolCalls) {
@@ -50,7 +52,7 @@ export function createAgent({ mem, llm, onEvent = () => {} }) {
           onEvent({ type: "tool", name: call.function.name, args });
           let result;
           try {
-            result = await runTool(mem, call.function.name, args);
+            result = await runTool(mem, call.function.name, args, ns);
           } catch (err) {
             result = { error: String(err.message) };
           }
@@ -82,7 +84,7 @@ ${recent}`;
     }
     const items = (parsed.facts || []).filter((f) => f?.text).slice(0, Number(process.env.MAX_WRITES_PER_TURN || 4)).map((f) => ({
       text: f.text,
-      namespace: f.namespace === "profile" ? NS.profile : NS.notes,
+      namespace: f.namespace === "profile" ? ns.profile : ns.notes,
     }));
     if (!items.length) return { saved: [] };
     const r = await rememberMany(mem, items).catch((e) => ({ error: e.message, results: [] }));
@@ -90,5 +92,5 @@ ${recent}`;
     return { saved, error: r.error };
   }
 
-  return { chat, boot, capture, history, getBooted: () => booted };
+  return { chat, boot, capture, history, ns, getBooted: () => booted };
 }

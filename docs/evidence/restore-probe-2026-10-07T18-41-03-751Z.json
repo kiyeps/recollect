@@ -1,0 +1,163 @@
+{
+  "gapMs": 25000,
+  "attempts": 3,
+  "account": "0xf60c01805404c1e3f9fb896e492ff362c0b9a9e4527e8eb4bfa7ffe54afebde8",
+  "rows": [
+    {
+      "namespace": "markov/state",
+      "indexed": 3,
+      "outcome": {
+        "kind": "OK",
+        "total": 0,
+        "restored": 0,
+        "skipped": 0,
+        "failed": 0,
+        "truncated": false,
+        "attempt": 1
+      }
+    },
+    {
+      "namespace": "markov/facts",
+      "indexed": 5,
+      "outcome": {
+        "kind": "OK",
+        "total": 0,
+        "restored": 0,
+        "skipped": 0,
+        "failed": 0,
+        "truncated": false,
+        "attempt": 1
+      }
+    },
+    {
+      "namespace": "s8-temp-audit",
+      "indexed": 0,
+      "outcome": {
+        "kind": "OK",
+        "total": 0,
+        "restored": 0,
+        "skipped": 0,
+        "failed": 0,
+        "truncated": false,
+        "attempt": 1
+      }
+    },
+    {
+      "namespace": "s8-idempotency-probe",
+      "indexed": 0,
+      "outcome": {
+        "kind": "OK",
+        "total": 0,
+        "restored": 0,
+        "skipped": 0,
+        "failed": 0,
+        "truncated": false,
+        "attempt": 1
+      }
+    },
+    {
+      "namespace": "openclaw",
+      "indexed": 98,
+      "outcome": {
+        "kind": "OK",
+        "total": 0,
+        "restored": 0,
+        "skipped": 0,
+        "failed": 0,
+        "truncated": false,
+        "attempt": 1
+      }
+    },
+    {
+      "namespace": "default",
+      "indexed": 9485,
+      "outcome": {
+        "kind": "OK",
+        "total": 99,
+        "restored": 0,
+        "skipped": 99,
+        "failed": 0,
+        "truncated": false,
+        "attempt": 1
+      }
+    },
+    {
+      "namespace": "sessions8-smoke",
+      "indexed": 2,
+      "outcome": {
+        "kind": "OK",
+        "total": 0,
+        "restored": 0,
+        "skipped": 0,
+        "failed": 0,
+        "truncated": false,
+        "attempt": 1
+      }
+    },
+    {
+      "namespace": "recollect/notes",
+      "indexed": 7,
+      "outcome": {
+        "kind": "OK",
+        "total": 0,
+        "restored": 0,
+        "skipped": 0,
+        "failed": 0,
+        "truncated": false,
+        "attempt": 1
+      }
+    },
+    {
+      "namespace": "recollect/profile",
+      "indexed": 20,
+      "outcome": {
+        "kind": "OK",
+        "total": 0,
+        "restored": 0,
+        "skipped": 0,
+        "failed": 0,
+        "truncated": false,
+        "attempt": 1
+      }
+    },
+    {
+      "namespace": "recollect/u6194195500/notes",
+      "indexed": 6,
+      "outcome": {
+        "kind": "OK",
+        "total": 0,
+        "restored": 0,
+        "skipped": 0,
+        "failed": 0,
+        "truncated": false,
+        "attempt": 1
+      }
+    },
+    {
+      "namespace": "recollect/u6194195500/profile",
+      "indexed": 14,
+      "outcome": {
+        "kind": "OK",
+        "total": 1,
+        "restored": 0,
+        "skipped": 1,
+        "failed": 0,
+        "truncated": false,
+        "attempt": 1
+      }
+    },
+    {
+      "namespace": "recollect/u5332246514/profile",
+      "indexed": 13,
+      "outcome": {
+        "kind": "OK",
+        "total": 0,
+        "restored": 0,
+        "skipped": 0,
+        "failed": 0,
+        "truncated": false,
+        "attempt": 1
+      }
+    }
+  ]
+}

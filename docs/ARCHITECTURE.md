@@ -6,11 +6,11 @@ Recollect is deliberately small. The interesting part is not the code, it is whe
 
 | State | Where it lives | Survives a restart |
 | --- | --- | --- |
-| Facts about the user | Walrus Memory, namespace `recollect/profile` and `recollect/notes` | Yes |
-| Conversation trail | Walrus Memory, namespace `recollect/log` | Yes |
+| Facts about the user | Walrus Memory, `recollect/u<userId>/profile` and `recollect/u<userId>/notes` | Yes |
+| Conversation trail | Walrus Memory, `recollect/u<userId>/log` | Yes |
 | Current chat history | In-memory array in `src/agent.mjs` | No |
 | Boot snapshot | In-memory object in `src/agent.mjs` | No |
-| Telegram chat registry | In-memory Map in `src/telegram.mjs` | No |
+| Telegram chat registry | In-memory Map in `src/telegram.mjs`, keyed by user id | No |
 | Credentials | `~/.memwal/credentials.json`, never in the repo | n/a |
 
 Nothing above the line is expected to survive. Losing the process loses the current turn's
@@ -42,8 +42,11 @@ Inside a turn the model can also call `recall_memory` with a narrower query and 
 ## Namespace policy
 
 `recall_memory` and `save_memory` both validate the namespace against the allowlist in
-`src/memory.mjs` and throw on anything else. The model cannot invent a namespace, and a
-prompt-injected instruction to write somewhere unusual fails at the SDK boundary rather than on chain.
+`src/memory.mjs` and throw on anything else. The allowlist is not a list of names the model can pick
+from: `namespacesFor(userId)` derives the three namespaces for one user from the channel identity,
+and the tool schema handed to the model contains only those three. The model cannot invent a
+namespace, and a prompt-injected instruction to write somewhere unusual fails at the SDK boundary
+rather than on chain.
 
 This is the one place where the design is deliberately rigid. An agent that can write anywhere
 becomes an unauditable memory dump with no way to answer "what did this bot store".
@@ -60,10 +63,12 @@ endpoint if configured.
 
 ## Channels
 
-Both channels call the same `createAgent`. The Telegram channel keeps one agent per chat id, because two
-users sharing one `history` array would leak context between them. The agent itself holds no user identity:
-it writes to whatever namespaces the allowlist permits, and the account is the account.
+Both channels call the same `createAgent`. The Telegram channel keys its in-memory registry by user
+id, not by chat id, and builds one agent per user with that user's namespaces. Two people talking to
+one bot instance therefore write to two separate memory spaces. The first version of this repository
+keyed the registry by chat and wrote every user into one shared namespace pair, which meant a group
+chat could mix two people's facts into a single space; the split above is what replaced it.
 
-That is a known limitation. Two Telegram users talking to one bot instance share one Walrus Memory account,
-so the memory is per bot, not per user. A per-user deployment, or a per-user namespace suffix, would be the
-fix. The repository ships the per-bot model because it is the one the deployed bot uses.
+The identity used for the namespace comes from the channel, never from model output. A user id the
+channel does not provide is a hard error rather than a fallback to a shared space, because a silent
+fallback is how memory ends up in the wrong place.

@@ -9,6 +9,7 @@ Memory relayer. No value below is estimated.
 | --- | --- |
 | Dedicated wallet created for Sessions | `0x071769d4a78183e520a8aade1124e5f7480acde33fb097e92ca4e4a39ea66c29` |
 | Agent (Walrus Memory account id) | `0xf60c01805404c1e3f9fb896e492ff362c0b9a9e4527e8eb4bfa7ffe54afebde8` |
+| `MEMWAL_AGENT_ID` (delegate key public part) | `0xcf7f9ea27c97d2dc628b68ad7be523c72af55b0bb7b4024ab6d9aaa3fec5f2ce` |
 | Relayer | `https://relayer.memory.walrus.xyz` (relayer version 0.1.0, API version 1.0.0) |
 | SDK | `@mysten-incubation/memwal` 0.1.8 |
 | Network | Sui mainnet |
@@ -22,56 +23,67 @@ sui client object 0xf60c01805404c1e3f9fb896e492ff362c0b9a9e4527e8eb4bfa7ffe54afe
 # owner 0xbfaadd8980b532c65ca09be4fdc9901c5ccafc1814f035502e526288aefd092f
 ```
 
+The delegate key used by this bot is one of seven on the account, labelled `Web App` on chain. Its
+`public_key` is `1V5TZT9QgE4IyzwGf2N3DSnogmuIJ1RXNCvPlVJ/rhE=` (Ed25519, base64) and its
+`sui_address` is the `MEMWAL_AGENT_ID` in the table above. Both were read off the account object, not
+copied from a dashboard.
+
 ## 2. Blob count on mainnet
 
 ```bash
 node tools/blob-count-proof.mjs
 ```
 
-Output, verbatim from the run:
+Output, verbatim from the run the submission is based on:
 
 ```
 agent (MemWal account id): 0xf60c01805404c1e3f9fb896e492ff362c0b9a9e4527e8eb4bfa7ffe54afebde8
 relayer: https://relayer.memory.walrus.xyz
 
-namespace            indexed  onchain  restored  skipped  failed  truncated
-recollect/profile         20        0         0        0       0      false
-                     owner: 0xbfaadd8980b532c65ca09be4fdc9901c5ccafc1814f035502e526288aefd092f
-recollect/notes            7        0         0        0       0      false
-                     owner: 0xbfaadd8980b532c65ca09be4fdc9901c5ccafc1814f035502e526288aefd092f
-recollect/log              0        0         0        0       0      false
-                     owner: 0xbfaadd8980b532c65ca09be4fdc9901c5ccafc1814f035502e526288aefd092f
+namespace                          indexed   storage
+  default                               9485   3621679
+  openclaw                                98     38868
+* recollect/u5332246514/profile           29      9486
+* recollect/u5016891236/profile           25      8258
+* recollect/profile                       20      6695
+* recollect/u6194195500/profile           14      4687
+* recollect/notes                          7      2607
+* recollect/u6194195500/notes              6      2091
+* recollect/u5016891236/notes              6      2055
+  markov/facts                             5      3000
+* recollect/u5332246514/notes              5      1660
+  markov/state                             3      3745
+  sessions8-smoke                          2       714
+  s8-temp-audit                            0         0
+  s8-idempotency-probe                     0         0
 
-Recollect namespaces -- indexed: 27  on-chain: 0
-Whole agent (all namespaces, incl. unrelated ones): 9620
+This agent's namespaces (recollect/*): 8 spaces, 112 blobs
+Whole agent (all namespaces, incl. unrelated ones): 9705
 ```
 
-Blobs written by this chatbot: **27** (20 in `recollect/profile`, 7 in `recollect/notes`).
+Blobs written by this chatbot: **112**, in 8 namespaces. The `default`, `openclaw`, `markov/*` and
+`s8-*` spaces belong to earlier work on the same account and are listed so the sum can be checked.
 
-Two things to read carefully in that table.
+## 3. Three users, each with its own memory space
 
-The count comes from the relayer's own namespace index for this account, read live through
-`listNamespaces()` at the time of the run. It is the count the relayer holds for these namespaces.
-The `onchain` column is `restore()`, which reports `total=0` for every namespace on this account
-including a namespace holding 98 memories, and fails with `503` for the namespace holding 9485. That
-discrepancy is documented as Bug 1 in `docs/FEEDBACK.md` and is not a claim about this chatbot.
+Three separate Telegram accounts used the deployed bot, one session each, twelve stated facts per
+session. The user id comes from the channel and is what the namespaces are built from, so the three
+spaces below are not an allocation the bot chose, they are a function of who was talking.
 
-The whole account holds 9620 memories across nine namespaces, because the same Walrus Memory account was
-used for earlier work before this chatbot existed. The table above lists only the two namespaces this
-chatbot writes to, plus the one it reserves. Cross-check:
+| Telegram user id | Persona used in the session | Facts stated | Blobs written |
+| --- | --- | --- | --- |
+| `6194195500` | Celyn | 12 | 20 (14 profile, 6 notes) |
+| `5332246514` | Riku | 12 | 34 (29 profile, 5 notes) |
+| `5016891236` | Nia | 12 | 31 (25 profile, 6 notes) |
 
-```bash
-node tools/restore-crosscheck.mjs
-# 9485  default               ERROR Walrus Memory server error (503): upstream temporarily unavailable
-#   98  openclaw              total=0 restored=0 skipped=0 failed=0
-#   20  recollect/profile     total=0 restored=0 skipped=0 failed=0
-#    7  recollect/notes       total=0 restored=0 skipped=0 failed=0
-#    5  markov/facts          total=0 restored=0 skipped=0 failed=0
-#    3  markov/state          total=0 restored=0 skipped=0 failed=0
-#    2  sessions8-smoke        total=0 restored=0 skipped=0 failed=0
-```
+Sessions are recorded in `docs/evidence/facts-a-*.json`, `facts-b-*.json`, `facts-c-*.json`, one turn
+per line with the reply and the blob ids the bot printed back. The blob count column is read from
+`listNamespaces()` per namespace, not from the session files.
 
-## 3. Blob ids returned at write time
+Handles are left out of this document on the account owner's instruction; the numeric ids are what
+the namespaces are derived from and are enough to re-read every space above.
+
+## 4. Blob ids returned at write time
 
 Every write returns blob ids, which the bot prints as a receipt:
 
@@ -79,11 +91,11 @@ Every write returns blob ids, which the bot prints as a receipt:
 | --- | --- | --- |
 | Session 1 | project name, timezone, answer-length preference | `hRrI0gOLYI`, `2XKZ-9jsvv`, `pJiqPsTl_m`, `Dzs8lg5H6f`, `eu-w5q3FCg`, `EBcR7NL6Vf` |
 | Session 2 (after restart) | recall answers only | `6WMAApVIyx`, `3q7-nGJUgh`, `rYHWUNBucA`, `AW-MuHusYr` |
+| Per-user sessions | 36 facts across three users | see the `facts-*.json` transcripts |
 
-Blob ids are truncated to ten characters by the bot's own receipt line. Full transcripts are in
-`docs/evidence/`.
+Blob ids are truncated to ten characters by the bot's own receipt line.
 
-## 4. The restart test
+## 5. The restart test
 
 | Step | Value |
 | --- | --- |
@@ -99,20 +111,31 @@ Transcripts:
 - `docs/evidence/conversation-b-1791395971.json` (session 2, after the restart, two turns)
 - `docs/evidence/conversation-ping-1791396115.json` (liveness check after the code change)
 
-Reproduce it:
+That counts as the honest test of the claim, because the counters cannot be used for it: see the
+`restore()` note below.
 
-```bash
-python3 tools/drive-conversation.py a      # session 1
-systemctl --user restart recollect.service
-python3 tools/drive-conversation.py b      # session 2, new process
-```
+## 6. `restore()` was not usable as a second source, and our first reading of it was wrong
 
-## 5. What is not proven here
+`restore(namespace, limit)` returned `total=0, restored=0, skipped=0` with no error for nine of the
+eleven namespaces on the account, including one the index reports as holding 98 memories, and
+returned 99 against 9485 and 1 against 14 for the other two. It also returned HTTP 503 for one
+namespace on one pass, and HTTP 429 on repeated calls with no `Retry-After`.
 
-- The relayer's namespace index is the count source. Walrus Memory does not expose an independent
-  on-chain enumeration of an account's blobs, and `restore()` does not currently produce one either
-  (Bug 1). The count is read from the relayer the chatbot itself writes to.
-- Memory is per bot, not per user. The deployed bot holds one account, so two users of one instance
-  share one memory space. This repository ships that model, and the limitation is documented in
-  `docs/ARCHITECTURE.md`.
-- No memory has been read or written on behalf of any user other than the researcher's own test account.
+Our first pass at this fired the calls back to back, counted the 429s as zeros, and concluded
+"total=0 for every namespace". That was an instrumentation error on our side and is corrected here.
+The serialised run with a 25 second gap is `tools/restore-probe.mjs`, and its raw rows are in
+`docs/evidence/restore-probe-*.json`. The finding is written up as Bug 1 in `docs/FEEDBACK.md`.
+
+## 7. What is not proven here
+
+- The blob count comes from the relayer's namespace index, read through `listNamespaces()`. Walrus
+  Memory does not expose an independent on-chain enumeration of an account's blobs, and `restore()`
+  does not currently produce one either. The count is read from the relayer the chatbot itself
+  writes to.
+- The three sessions above are twelve facts each, run in one sitting. That demonstrates three users
+  with their own spaces and their own memories; it is not a claim that the bot has been in daily use
+  by three people for weeks.
+- No memory has been read or written on behalf of any user other than the account owner's own test
+  accounts.
+- The latency figures in the transcripts (30 to 70 seconds per turn) are with the capture pass
+  enabled, on a self-hosted model. They are not a benchmark of the memory layer.

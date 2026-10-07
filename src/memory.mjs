@@ -5,15 +5,32 @@ import os from "node:os";
 import path from "node:path";
 import { MemWal } from "@mysten-incubation/memwal";
 
-// Namespaces this chatbot owns. Keeping them under one prefix makes the agent's
-// footprint obvious on chain and keeps it away from other projects' namespaces.
+// Shared namespaces, kept so memories written before the per-user split stay readable.
 export const NS = Object.freeze({
   profile: "recollect/profile", // durable facts about the user
   notes: "recollect/notes", // things the user asked to remember
   log: "recollect/log", // per-conversation summaries (the "last time" trail)
 });
 
-export const ALL_NAMESPACES = Object.values(NS);
+// Per-user namespaces. Memory belongs to the person talking, not to the bot, so one
+// instance can serve several people without mixing them together. The id is ours, taken
+// from the channel identity, never from model output.
+export function namespacesFor(userId) {
+  const id = String(userId).replace(/[^0-9]/g, "");
+  if (!id) throw new Error(`invalid user id: ${userId}`);
+  return Object.freeze({
+    profile: `recollect/u${id}/profile`,
+    notes: `recollect/u${id}/notes`,
+    log: `recollect/u${id}/log`,
+  });
+}
+
+const ALLOWED = /^recollect\/(u[0-9]+\/)?(profile|notes|log)$/;
+
+export function assertNamespace(namespace) {
+  if (!ALLOWED.test(String(namespace))) throw new Error(`namespace not allowed: ${namespace}`);
+  return namespace;
+}
 
 export function loadCredentials(credsPath) {
   const p = credsPath || process.env.MEMWAL_CREDENTIALS || path.join(os.homedir(), ".memwal", "credentials.json");
@@ -33,7 +50,7 @@ export function createMemory(creds) {
 }
 
 export async function recall(mem, query, namespace, limit = 5) {
-  if (!ALL_NAMESPACES.includes(namespace)) throw new Error(`namespace not allowed: ${namespace}`);
+  assertNamespace(namespace);
   const r = await mem.recall({ query, limit, namespace });
   return (r.results || []).map((m) => ({
     text: m.text,
@@ -43,14 +60,14 @@ export async function recall(mem, query, namespace, limit = 5) {
 }
 
 export async function remember(mem, text, namespace) {
-  if (!ALL_NAMESPACES.includes(namespace)) throw new Error(`namespace not allowed: ${namespace}`);
+  assertNamespace(namespace);
   const r = await mem.rememberAndWait(text, namespace);
   return { blob_id: r.blob_id, namespace: r.namespace };
 }
 
 export async function rememberMany(mem, items) {
   for (const it of items) {
-    if (!ALL_NAMESPACES.includes(it.namespace)) throw new Error(`namespace not allowed: ${it.namespace}`);
+    assertNamespace(it.namespace);
   }
   const r = await mem.rememberBulkAndWait(items.map((it) => ({ text: it.text, namespace: it.namespace })));
   return {

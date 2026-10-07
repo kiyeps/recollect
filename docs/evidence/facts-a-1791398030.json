@@ -1,0 +1,74 @@
+[
+  {
+    "user": "a",
+    "me": "Namaku Celyn. Panggil aku Celyn saja.",
+    "bot": "Siap, Celyn. Ada yang bisa kubantu?\n\n[memory saved to Walrus: V8h3Wb3HLA, HXQFEtroWa]",
+    "seconds": 70.8
+  },
+  {
+    "user": "a",
+    "me": "Aku tinggal di Jakarta.",
+    "bot": "Tercatat, Celyn tinggal di Jakarta.",
+    "seconds": 99.1
+  },
+  {
+    "user": "a",
+    "me": "Aku kerja sebagai security researcher.",
+    "bot": "Tercatat: Celyn bekerja sebagai security researcher.",
+    "seconds": 45.7
+  },
+  {
+    "user": "a",
+    "me": "Aku biasanya mulai kerja jam 11 malam dan selesai jam 4 pagi.",
+    "bot": "Tercatat: jam kerja Celyn 11 malam sampai 4 pagi.",
+    "seconds": 38.1
+  },
+  {
+    "user": "a",
+    "me": "Aku suka minum kopi hitam tanpa gula waktu kerja.",
+    "bot": "Tercatat: kopi hitam tanpa gula saat kerja.",
+    "seconds": 41.6
+  },
+  {
+    "user": "a",
+    "me": "Aku tidak suka makanan yang terlalu manis.",
+    "bot": "Tercatat: Celyn tidak suka makanan yang terlalu manis.\n\n[memory saved to Walrus: hpyif0MYnk, aq1sS64ZHc, bJ4pYWQx8y]",
+    "seconds": 85.5
+  },
+  {
+    "user": "a",
+    "me": "Aku lebih suka jawaban singkat dan langsung ke intinya.",
+    "bot": "Tercatat.",
+    "seconds": 32.5
+  },
+  {
+    "user": "a",
+    "me": "Proyek yang sedang aku kerjakan namanya Recollect.",
+    "bot": "Tercatat: proyek Recollect.\n\n[memory saved to Walrus: TcVYk9iWsi]",
+    "seconds": 73.2
+  },
+  {
+    "user": "a",
+    "me": "Proyek Recollect dibangun pakai Node.js dan Walrus Memory.",
+    "bot": "Tercatat: Recollect pakai Node.js dan Walrus Memory.\n\n[memory saved to Walrus: R0jbBm9kL2, pzd3O5x3Ao]",
+    "seconds": 69.1
+  },
+  {
+    "user": "a",
+    "me": "Aku mau semua memori proyek itu disimpan di Walrus, bukan di server lokal.",
+    "bot": "Tercatat: memori proyek disimpan di Walrus, bukan server lokal.",
+    "seconds": 32.8
+  },
+  {
+    "user": "a",
+    "me": "Aku pakai Telegram untuk kerja sehari-hari.",
+    "bot": "Tercatat: Telegram untuk kerja harian.",
+    "seconds": 28.6
+  },
+  {
+    "user": "a",
+    "me": "Catat juga: aku paling produktif di malam hari.",
+    "bot": "Tercatat: paling produktif di malam hari.",
+    "seconds": 32.9
+  }
+]

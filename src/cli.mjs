@@ -7,15 +7,19 @@ import { createAgent } from "./agent.mjs";
 const creds = loadCredentials();
 const mem = createMemory(creds);
 const llm = llmFromEnv();
+// The CLI channel is one user: whoever runs it. Override with RECOLLECT_USER_ID
+// to give two CLI users separate memory on the same agent.
 const agent = createAgent({
   mem,
   llm,
+  userId: process.env.RECOLLECT_USER_ID || "0",
   onEvent: (e) => console.log(`   [memory:${e.name}] ${JSON.stringify(e.args).slice(0, 140)}`),
 });
 
 await agent.boot();
 const booted = agent.getBooted();
 console.log(`Recollect -- memory on Walrus. Recalled ${booted.profile.length} profile fact(s), ${booted.trail.length} trail entry(ies).`);
+console.log(`User namespaces: ${agent.ns.profile}, ${agent.ns.notes}`);
 console.log("Commands: /mem  show recalled memory   /quit  exit");
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });

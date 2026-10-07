@@ -10,44 +10,60 @@ Environment for every observation: `@mysten-incubation/memwal` 0.1.8, relayer
 `https://relayer.memory.walrus.xyz` (relayer version 0.1.0, API version 1.0.0), Sui mainnet,
 Node.js 24.18.0, Linux. Observed 2026-10-08.
 
-## Bug 1: `restore()` reports zero on-chain blobs for namespaces that hold memories
+## Bug 1: `restore()` returns 0 for most namespaces and no error, so it cannot verify anything
 
-What we expected: `restore(namespace)` to report how many of the namespace's blobs it found on chain,
-which is what the result fields suggest (`total`, `restored`, `skipped`, `failed`, `truncated`, `owner`).
+What we expected: `restore(namespace)` to report what it found for the namespace on chain, which is
+what the result fields suggest (`total`, `restored`, `skipped`, `failed`, `truncated`, `owner`).
 
-What happened: `total`, `restored` and `skipped` come back `0` for namespaces the relayer's own index
-reports as populated, and the largest namespace fails with `503 Upstream temporarily unavailable`.
+What happened: on a serialised run with a 25 second gap between calls, `total`, `restored` and
+`skipped` come back `0` for nine of eleven namespaces, including one the index reports as holding 98
+memories, and the two namespaces that do return a number return far less than the index says.
 
 Steps to reproduce:
 
 ```bash
-# 1. What the relayer index says the account holds
-node -e "import('./src/memory.mjs').then(async m=>{const mem=m.createMemory(m.loadCredentials());
-const ns=await mem.listNamespaces();
-for(const n of ns.namespaces) console.log(n.memory_count, n.id);})"
-
-# 2. What restore says about the same namespaces
-node -e "import('./src/memory.mjs').then(async m=>{const mem=m.createMemory(m.loadCredentials());
-for(const n of ['recollect/profile','recollect/notes','openclaw','default'])
-console.log(n, JSON.stringify(await mem.restore(n,200)));})"
+# serialised on purpose: back to back calls start returning HTTP 429
+node tools/restore-probe.mjs
 ```
 
-Observed:
+Observed, one run, `truncated` false everywhere:
 
 | Namespace | `listNamespaces()` `memory_count` | `restore()` result |
 | --- | --- | --- |
-| `recollect/profile` | 20 | `total=0 restored=0 skipped=0 failed=0 truncated=false` |
-| `recollect/notes` | 7 | `total=0 restored=0 skipped=0 failed=0 truncated=false` |
-| `openclaw` | 98 | `total=0 restored=0 skipped=0 failed=0 truncated=false` |
-| `default` | 9485 | `503 Upstream temporarily unavailable (truncated)` |
+| `openclaw` | 98 | `total=0 restored=0 skipped=0 failed=0` |
+| `default` | 9485 | `total=99 restored=0 skipped=99 failed=0` |
+| `recollect/profile` | 20 | `total=0 restored=0 skipped=0 failed=0` |
+| `recollect/u6194195500/profile` | 14 | `total=1 restored=0 skipped=1 failed=0` |
+| `recollect/notes` | 7 | `total=0 restored=0 skipped=0 failed=0` |
+| `recollect/u6194195500/notes` | 6 | `total=0 restored=0 skipped=0 failed=0` |
+| `markov/facts` | 5 | `total=0 restored=0 skipped=0 failed=0` |
+| `markov/state` | 3 | `total=0 restored=0 skipped=0 failed=0` |
+| `sessions8-smoke` | 2 | `total=0 restored=0 skipped=0 failed=0` |
+| `s8-temp-audit` | 0 | `total=0 restored=0 skipped=0 failed=0` |
+| `s8-idempotency-probe` | 0 | `total=0 restored=0 skipped=0 failed=0` |
+
+The last row above the empties is the clearest one: those 14 memories were written minutes earlier by
+this same client through `rememberAndWait` and `rememberBulkAndWait`, and the writes returned blob
+ids, so the client believes they landed. The index then counted 14 and `restore()` found 1.
+
+The same call is also inconsistent between runs: on one pass `default` raised
+`503 Upstream temporarily unavailable`, and on the next pass the same namespace returned `total=99`.
+Issued back to back, later calls raise `429 Rate limit exceeded` (layer `delegate`) with no
+`Retry-After`; a ten call loop produced four answers and six 429s.
 
 Why it matters: `restore()` looks like the only call that would let an application verify its own
-on-chain footprint, or repair a local index after a loss. As it stands, a caller cannot tell a namespace that
-holds nothing from a namespace whose on-chain page failed to enumerate, because both come back `0`. An application
-that treated `restored: 0` as "nothing on chain" would be wrong about a namespace holding 98 blobs.
+on-chain footprint, or repair a local index after a loss. As it stands, a caller cannot tell a
+namespace that holds nothing from one whose page failed to enumerate, and cannot tell a partial
+restore from a complete one. An application that read `restored: 0` as "nothing on chain" would be
+wrong about a namespace holding 98 blobs.
 
-Related, and possibly the same root cause: the response omits `truncated` on some paths, which the SDK already
-defaults to `false`, so "not known to be truncated" reads as "not truncated".
+Also worth noting: the response omits `truncated` on some paths, and the SDK defaults it to `false`,
+so "not known to be truncated" reads as "not truncated".
+
+Method note, because we got this wrong once: our first pass fired the calls back to back, treated
+HTTP 429 responses as zero, and reported "restore returns 0 for every namespace". That was an
+instrumentation artefact. The table above is the serialised run, with 429s retried after a backoff
+rather than counted.
 
 ## Bug 2: recall surfaces superseded facts, with no way to say a fact replaced another
 
@@ -78,9 +94,9 @@ and bytes would close that, and it would also let a chatbot show the user its ow
 ## Improvement idea: recovery from a lost index without re-reading every page
 
 If the local index is lost, everything has to be re-read from the on-chain blob page, and `restore()` is the
-only entry point. Bug 1 makes that path unusable for the largest namespace, so a lost index cannot currently be
-rebuilt. A bounded, paginated restore with a status per page would make recovery possible to retry, and possible to
-observe while it runs.
+only entry point. Bug 1 makes that path unusable: it reports 0 for most namespaces with no error, so a client
+cannot tell whether a page was read and empty or never read at all. A bounded, paginated restore with a status per
+page would make recovery possible to retry, and possible to observe while it runs.
 
 ## What worked well
 

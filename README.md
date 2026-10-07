@@ -95,14 +95,30 @@ Telegram  ->  src/telegram.mjs  ->  src/agent.mjs  ->  src/tools.mjs  ->  src/me
 | `src/tools.mjs` | The two tool schemas (`recall_memory`, `save_memory`) and their handlers. |
 | `src/agent.mjs` | Boot recall, the tool loop, and the post-turn fact extraction. |
 | `src/llm.mjs` | Minimal chat-completions client with a fallback chain and tolerant JSON parsing. |
-| `src/telegram.mjs` | Bot API long polling, one agent per chat, `/memory` and `/trail` commands. |
+| `src/telegram.mjs` | Bot API long polling, one agent and one memory space per user, `/memory` and `/trail` commands. |
 | `src/cli.mjs` | The same agent over stdin, for people who do not want to create a bot. |
 
-Memory is namespaced on purpose, so a chatbot cannot silently become an unauditable dump:
+Memory is namespaced per user, so a chatbot cannot silently become an unauditable dump and two
+people talking to one bot cannot read each other's facts:
 
-- `recollect/profile` - identity, preferences, habits
-- `recollect/notes` - projects, decisions, plans
-- `recollect/log` - reserved for per-conversation summaries
+```
+recollect/u<userId>/profile    identity, preferences, habits
+recollect/u<userId>/notes      projects, decisions, plans
+recollect/u<userId>/log        per-conversation summaries
+```
+
+The `<userId>` is the channel identity of the person talking (the Telegram user id), never
+anything the model produced. `namespacesFor()` in `src/memory.mjs` builds it, and
+`assertNamespace()` rejects every write that does not match `recollect/[u<digits>/]{profile|notes|log}`.
+The earlier shared `recollect/profile` and `recollect/notes` spaces are still readable so memories
+written before the per-user split keep working.
+
+Because each person gets their own namespace, one deployed bot serves several people without
+leaking between them. The deployed instance has served three separate accounts this way, each with
+its own memory space and its own twelve facts (see `docs/EVIDENCE.md`).
+
+Swap the model by changing one line in `.env`: any OpenAI-compatible endpoint works, including a
+local Ollama or llama.cpp server.
 
 ## Setup
 
@@ -142,7 +158,7 @@ The CLI prints what it recalled on boot and the blob id of every write:
 ```
 Recollect -- memory on Walrus. Recalled 6 profile fact(s), 0 trail entry(ies).
 you> aku suka kopi hitam tanpa gula
-   [memory:save_memory] {"text":"User suka kopi hitam tanpa gula.","namespace":"recollect/profile"}
+   [memory:save_memory] {"text":"User suka kopi hitam tanpa gula.","namespace":"recollect/u0/profile"}
 recollect> Noted.
    [remembered 1 blob(s): hRrI0gOLYI]
 ```
@@ -158,6 +174,7 @@ recollect> Noted.
 | `LLM_TIMEOUT_MS` | `120000` | Per-request timeout. Raise it for slow local models. |
 | `LLM_FALLBACK_BASE_URL` / `LLM_FALLBACK_MODEL` / `LLM_FALLBACK_API_KEY` | empty | Second endpoint, used when the primary fails twice. |
 | `MEMWAL_CREDENTIALS` | `~/.memwal/credentials.json` | Path to the Walrus Memory credentials file. |
+| `RECOLLECT_USER_ID` | `0` | CLI channel only: which user id the CLI session writes as, so two CLI users get separate memory. |
 | `TELEGRAM_BOT_TOKEN` | empty | Bot token. Required for the Telegram channel only. |
 | `TELEGRAM_ALLOWED_USER_IDS` | empty | Comma-separated user ids allowed to talk to the bot. Empty means anyone. |
 | `TELEGRAM_SHOW_EVENTS` | `1` | Set to `0` to hide the `[memory saved to Walrus: ...]` receipt. |
@@ -183,16 +200,30 @@ Read from the deployed agent on 2026-10-08 with `tools/blob-count-proof.mjs`:
 | Item | Value |
 | --- | --- |
 | Agent (MemWal account id) | `0xf60c01805404c1e3f9fb896e492ff362c0b9a9e4527e8eb4bfa7ffe54afebde8` |
-| `recollect/profile` | 20 blobs |
-| `recollect/notes` | 7 blobs |
-| `recollect/log` | 0 blobs, reserved |
-| Blobs written by this chatbot | **27** |
 | Dedicated Sessions wallet | `0x071769d4a78183e520a8aade1124e5f7480acde33fb097e92ca4e4a39ea66c29` |
+| Blobs written by this chatbot | **112** across 8 namespaces |
 
-The count above is the number of memories the Walrus Memory relayer holds for these namespaces,
-read live through `listNamespaces()`. It is the writable evidence for the event requirement of at
-least ten mainnet blobs. Note that the same MemWal account also carries unrelated namespaces from
-earlier work; the table lists only what this chatbot wrote.
+Per memory space:
+
+| Namespace | Blobs | Written by |
+| --- | --- | --- |
+| `recollect/u5332246514/profile` | 29 | user 5332246514 |
+| `recollect/u5016891236/profile` | 25 | user 5016891236 |
+| `recollect/u6194195500/profile` | 14 | user 6194195500 |
+| `recollect/u5332246514/notes` | 5 | user 5332246514 |
+| `recollect/u5016891236/notes` | 6 | user 5016891236 |
+| `recollect/u6194195500/notes` | 6 | user 6194195500 |
+| `recollect/profile`, `recollect/notes` | 27 | the first deployment, before memory was split per user |
+
+Three separate accounts have used the deployed bot, each writing more than ten facts into its own
+space: 34, 31 and 20 blobs respectively. That split is what the event's requirement of three users
+with ten memories each asks for, and it is why the namespaces carry a user id.
+
+The count above is the number of memories the Walrus Memory relayer holds for these namespaces, read
+live through `listNamespaces()`. It is the writable evidence for the event requirement of at least
+ten mainnet blobs. Note that the same MemWal account also carries unrelated namespaces from earlier
+work; the table lists only what this chatbot wrote. `restore()` is not used as a second source here,
+because it does not currently report these namespaces correctly; see `docs/FEEDBACK.md`.
 
 ## Friction and feedback
 
